@@ -1,9 +1,9 @@
 version: "3.3"
 services:
   app:
-    build: .
-    ports:
-      - 0.0.0.0:5000:${FLASK_RUN_PORT}
+    build:
+      context: ./
+      dockerfile: Dockerfile.app
     restart: always
     depends_on:
       - db
@@ -21,9 +21,23 @@ services:
   adminer:
     image: adminer:4.8.0
     restart: always
-    ports:
-      - 0.0.0.0:27791:8080
     depends_on:
       - db
-    env_file:
-      - .env
+
+  proxy:
+    build:
+      context: ./
+      dockerfile: Dockerfile.nginx
+      args:
+        - GUNICORN_INTERNAL_PORT=$GUNICORN_INTERNAL_PORT
+        - NGINX_INTERNAL_PORT_APP=$NGINX_INTERNAL_PORT_APP
+        - NGINX_INTERNAL_PORT_ADMINER=$NGINX_INTERNAL_PORT_ADMINER
+    restart: always
+    ports:
+      - 0.0.0.0:$NGINX_EXTERNAL_PORT_APP:$NGINX_INTERNAL_PORT_APP
+      - 0.0.0.0:$NGINX_EXTERNAL_PORT_ADMINER:$NGINX_INTERNAL_PORT_ADMINER
+    depends_on:
+      - app
+    logging:
+      options:
+        max-size: "${DOCKER_LOGS_MAX_SIZE:-100M}"
