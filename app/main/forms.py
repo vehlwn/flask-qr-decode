@@ -12,8 +12,8 @@ def _pil_image_check(form, field):
     input_stream = io.BytesIO(image_bytes)
     try:
         PIL.Image.open(input_stream).convert("RGB")
-    except Exception as ex:
-        raise wtforms.ValidationError(str(ex))
+    except Exception:
+        raise wtforms.ValidationError("Invalid image file")
 
 
 class ImageForm(flask_wtf.FlaskForm):
