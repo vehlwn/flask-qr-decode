@@ -7,11 +7,8 @@
 <div class="page-header">
     <h1>Detect and decode barcodes in images</h1>
 </div>
-{{ wtf.quick_form(form) }}
 
-{% if image_hash %}
 <h2>Scan results</h2>
-{% if barcodes %}
 <div class="table-responsive">
     <table class="table table-hover">
         <thead>
@@ -23,13 +20,13 @@
             </tr>
         </thead>
         <tbody>
-            {% for barcode_data in barcodes %}
+            {% for barcode_data in cached_decoded_result.barcode_datum %}
             <tr>
                 <td> {{ loop.index }}</td>
                 <td> {{ barcode_data.code_type }}</td>
                 <td> {{ barcode_data.str_data }}</td>
                 <td>
-                    <img src="{{url_for('.scanned_image', image_hash=image_hash, barcode_index=loop.index0)}}"
+                    <img src="{{url_for('.mini_image', id=barcode_data.id)}}"
                         alt="Scan result" class="img-responsive">
                 </td>
             </tr>
@@ -37,9 +34,5 @@
         </tbody>
     </table>
 </div>
-{% else %}
-<p>Could not find any barcode. Try another image.</p>
-{% endif %}
-{% endif %}
 
 {% endblock %}
