@@ -2,8 +2,10 @@
 
 export SECRET_KEY="${FLASK_SECRET_KEY}"
 export FLASK_RUN_PORT="${FLASK_INTERNAL_PORT}"
-export DEBUG="False"
-export FLASK_ENV="docker"
+export FLASK_ENV="production"
+export FLASK_RUN_HOST="0.0.0.0"
+export FLASK_APP="main.py"
+export FLASK_CONFIG="docker"
 
 while true; do
     flask deploy
