@@ -6,6 +6,7 @@ export FLASK_ENV="production"
 export FLASK_RUN_HOST="0.0.0.0"
 export FLASK_APP="main.py"
 export FLASK_CONFIG="docker"
+export FLASK_HASH_INITIAL_VALUE="$(od --address-radix n --read-bytes 4 --format u /dev/urandom)"
 
 while true; do
     flask deploy
