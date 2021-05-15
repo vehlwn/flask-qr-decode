@@ -2,10 +2,10 @@ from datetime import datetime
 import flask
 import zlib
 import os
+import sys
 
 from . import main
 from .. import barcode_scanner
-from .. import db
 from ..models import DecodedResultCache, BarcodeData
 from .forms import ImageForm
 
@@ -22,7 +22,7 @@ def index():
         f = form.image.data
         image_bytes = f.read()
         input_image_hash = zlib.crc32(image_bytes, _CRC32_VALUE)
-        cached_decoded_result = DecodedResultCache.query.filter_by(
+        cached_decoded_result = DecodedResultCache.objects(
             input_image_hash=input_image_hash
         ).first()
         if cached_decoded_result is None:
@@ -40,8 +40,7 @@ def index():
             cached_decoded_result.add_result_datum(result)
         else:
             cached_decoded_result.timestamp = datetime.utcnow()
-        db.session.add(cached_decoded_result)
-        db.session.commit()
+        cached_decoded_result.save()
         return flask.render_template(
             "scan-results.html",
             cached_decoded_result=cached_decoded_result,
@@ -51,8 +50,26 @@ def index():
 
 @main.route("/mini_image/<int:id>")
 def mini_image(id: int):
-    barcode_data = BarcodeData.query.filter_by(id=id).first_or_404()
+    cached_decoded_result = list(
+        DecodedResultCache.objects.aggregate(
+            [
+                {"$match": {"barcode_datum.id": id}},
+                {
+                    "$project": {
+                        "barcode_datum": {
+                            "$filter": {
+                                "input": "$barcode_datum",
+                                "as": "barcode_data",
+                                "cond": {"$eq": ["$$barcode_data.id", id]},
+                            }
+                        }
+                    }
+                },
+            ]
+        )
+    )[0]
+    barcode_data = cached_decoded_result["barcode_datum"][0]
     return flask.Response(
-        barcode_data.mini_image,
+        barcode_data["mini_image"],
         mimetype=_OUTPUT_MIME_TYPE,
     )

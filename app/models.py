@@ -1,40 +1,24 @@
-import datetime
-import sys
+from datetime import datetime
 
-from . import db
 from . import barcode_scanner
-
-_HASH_COLUMN = db.Numeric(10)
-
-
-class BarcodeData(db.Model):
-    __tablename__ = "barcode_data"
-    id = db.Column(db.Integer, primary_key=True)
-    code_type = db.Column(db.Text)
-    str_data = db.Column(db.Text)
-    mini_image = db.Column(db.LargeBinary)
-    input_image_hash = db.Column(
-        _HASH_COLUMN,
-        db.ForeignKey("decoded_result_cache.input_image_hash", ondelete="CASCADE"),
-    )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+from . import db
 
 
-class DecodedResultCache(db.Model):
-    __tablename__ = "decoded_result_cache"
-    input_image_hash = db.Column(
-        _HASH_COLUMN,
+class BarcodeData(db.EmbeddedDocument):
+    id = db.SequenceField()
+    code_type = db.StringField(required=True)
+    str_data = db.StringField(required=True)
+    mini_image = db.BinaryField(required=True)
+
+
+class DecodedResultCache(db.Document):
+    input_image_hash = db.IntField(
         primary_key=True,
+        min_value=0,
+        max_value=2 ** 32 - 1,
     )
-    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    barcode_datum = db.relationship(
-        "BarcodeData",
-        backref="decoded_result",
-        cascade="all, delete, delete-orphan",
-        passive_deletes=True,
-    )
+    timestamp = db.DateTimeField(required=True, default=datetime.utcnow)
+    barcode_datum = db.ListField(db.EmbeddedDocumentField(BarcodeData))
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -48,13 +32,3 @@ class DecodedResultCache(db.Model):
                     mini_image=barcode.mini_image,
                 )
             )
-
-
-@db.event.listens_for(DecodedResultCache, "before_insert")
-def clean_cache(_mapper, _connection, _target):
-    now = datetime.datetime.utcnow()
-    expire_period = datetime.timedelta(hours=1)
-    too_old = now - expire_period
-    db.session.query(DecodedResultCache).filter(
-        DecodedResultCache.timestamp <= too_old
-    ).delete()
