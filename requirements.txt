@@ -3,6 +3,7 @@ Flask-Bootstrap
 Flask-CLI
 Flask-WTF
 Pillow
+blinker
 flask-mongoengine
 gunicorn
 pyzbar
