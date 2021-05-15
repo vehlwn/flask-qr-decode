@@ -35,7 +35,7 @@ class DecodedResultCache(db.Document):
             )
 
 
-def _clear_cache(_sender, _document):
+def _clear_cache(sender, document):
     now = datetime.datetime.utcnow()
     expire_period = datetime.timedelta(hours=1)
     too_old = now - expire_period
