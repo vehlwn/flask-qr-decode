@@ -1,7 +1,7 @@
 from datetime import datetime
 import flask
-import random
 import zlib
+import os
 
 from . import main
 from .. import barcode_scanner
@@ -12,7 +12,7 @@ from .forms import ImageForm
 
 _OUTPUT_IMAGE_FORMAT = "PNG"
 _OUTPUT_MIME_TYPE = "image/png"
-_CRC32_VALUE = random.randint(0, 2 ** 32 - 1)
+_CRC32_VALUE = int(os.environ["FLASK_HASH_INITIAL_VALUE"])
 
 
 @main.route("/", methods=["GET", "POST"])
