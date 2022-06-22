@@ -13,7 +13,7 @@ if __name__ == "__main__":
         "--host", help="host where to bind web server", type=str, default="0.0.0.0",
     )
     parser.add_argument(
-        "--port", help="port where to bind web server", type=str, default="2988",
+        "--port", help="port where to bind web server", type=int, default=2988,
     )
     args = parser.parse_args()
     app.run(
