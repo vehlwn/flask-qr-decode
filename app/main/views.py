@@ -1,12 +1,13 @@
+from datetime import datetime
 import flask
 import random
 import zlib
 
 from . import main
-from .forms import ImageForm
 from .. import barcode_scanner
-from ..models import DecodedResultCache, BarcodeData
 from .. import db
+from ..models import DecodedResultCache, BarcodeData
+from .forms import ImageForm
 
 
 _OUTPUT_IMAGE_FORMAT = "PNG"
@@ -37,13 +38,10 @@ def index():
                 input_image_hash=input_image_hash
             )
             cached_decoded_result.add_result_datum(result)
-            db.session.add(cached_decoded_result)
-            db.session.commit()
         else:
-            if len(cached_decoded_result.barcode_datum) == 0:
-                return flask.render_template(
-                    "no-barcodes-found.html",
-                )
+            cached_decoded_result.timestamp = datetime.utcnow()
+        db.session.add(cached_decoded_result)
+        db.session.commit()
         return flask.render_template(
             "scan-results.html",
             cached_decoded_result=cached_decoded_result,
