@@ -1,7 +1,8 @@
-from datetime import datetime
+import datetime
 
 from . import barcode_scanner
 from . import db
+import mongoengine
 
 
 class BarcodeData(db.EmbeddedDocument):
@@ -17,7 +18,7 @@ class DecodedResultCache(db.Document):
         min_value=0,
         max_value=2 ** 32 - 1,
     )
-    timestamp = db.DateTimeField(required=True, default=datetime.utcnow)
+    timestamp = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
     barcode_datum = db.ListField(db.EmbeddedDocumentField(BarcodeData))
 
     def __init__(self, **kwargs):
@@ -32,3 +33,13 @@ class DecodedResultCache(db.Document):
                     mini_image=barcode.mini_image,
                 )
             )
+
+
+def _clear_cache(_sender, _document):
+    now = datetime.datetime.utcnow()
+    expire_period = datetime.timedelta(hours=1)
+    too_old = now - expire_period
+    DecodedResultCache.objects(timestamp__lte=too_old).delete()
+
+
+mongoengine.signals.pre_save.connect(_clear_cache)
