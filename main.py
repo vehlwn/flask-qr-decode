@@ -1,7 +1,7 @@
 import os
 from app import create_app, db
 
-app = create_app(os.getenv("FLASK_CONFIG") or "docker")
+app = create_app(os.environ["FLASK_CONFIG"])
 
 
 @app.cli.command()

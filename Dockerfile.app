@@ -11,7 +11,4 @@ COPY app app
 COPY main.py config.py entrypoint.sh ./
 
 EXPOSE 5000
-ENV FLASK_RUN_HOST 0.0.0.0
-ENV FLASK_APP main.py
-ENV FLASK_CONFIG docker
 ENTRYPOINT ["./entrypoint.sh"]
