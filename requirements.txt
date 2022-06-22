@@ -6,4 +6,5 @@ Flask-WTF
 Pillow
 PyMySQL
 cryptography
+gunicorn
 pyzbar
