@@ -57,7 +57,6 @@ def decode(image_bytes: bytes, output_format: str = "PNG") -> Result:
             )
             for point in code.polygon
         ]
-        print("points =", points)
         points.append(points[0])
         points.append(points[1])
         draw.line(points, fill="#0000ff", width=LINE_WIDTH, joint="curve")
