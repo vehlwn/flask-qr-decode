@@ -32,7 +32,6 @@ def index():
             if len(result.barcodes) == 0:
                 return flask.render_template(
                     "no-barcodes-found.html",
-                    form=form,
                 )
             cached_decoded_result = DecodedResultCache(
                 input_image_hash=input_image_hash
@@ -44,11 +43,9 @@ def index():
             if len(cached_decoded_result.barcode_datum) == 0:
                 return flask.render_template(
                     "no-barcodes-found.html",
-                    form=form,
                 )
         return flask.render_template(
             "scan-results.html",
-            form=form,
             cached_decoded_result=cached_decoded_result,
         )
     return flask.render_template("main-form.html", form=form)
