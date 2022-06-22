@@ -1,0 +1,29 @@
+version: "3.3"
+services:
+  app:
+    build: .
+    ports:
+      - 0.0.0.0:5000:${FLASK_RUN_PORT}
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+  db:
+    image: mysql:8.0.23
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - /tmp/db_data:/var/lib/mysql
+
+  adminer:
+    image: adminer:4.8.0
+    restart: always
+    ports:
+      - 0.0.0.0:27791:8080
+    depends_on:
+      - db
+    env_file:
+      - .env
