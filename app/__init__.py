@@ -1,12 +1,12 @@
+from flask_mongoengine import MongoEngine
 import flask
 import flask_bootstrap
 import os
-from flask_sqlalchemy import SQLAlchemy
 
 from config import config
 
 bootstrap = flask_bootstrap.Bootstrap()
-db = SQLAlchemy()
+db = MongoEngine()
 
 
 def create_app(config_name):
@@ -15,6 +15,9 @@ def create_app(config_name):
     config[config_name].init_app(app)
 
     bootstrap.init_app(app)
+    app.config["MONGODB_SETTINGS"] = {
+        "host": config[config_name].MONGO_URI,
+    }
     db.init_app(app)
 
     # ensure the instance folder exists

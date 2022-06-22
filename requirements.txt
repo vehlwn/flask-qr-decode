@@ -1,10 +1,8 @@
 Flask
 Flask-Bootstrap
 Flask-CLI
-Flask-SQLAlchemy
 Flask-WTF
 Pillow
-PyMySQL
-cryptography
+flask-mongoengine
 gunicorn
 pyzbar

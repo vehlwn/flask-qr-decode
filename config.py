@@ -3,7 +3,6 @@ import os
 
 class Config:
     SECRET_KEY = os.environ["SECRET_KEY"]
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     @staticmethod
     def init_app(app):
@@ -11,12 +10,10 @@ class Config:
 
 
 class DockerConfig(Config):
-    mysql_pass = os.environ["MYSQL_PASSWORD"]
-    mysql_user = os.environ["MYSQL_USER"]
-    mysql_db = os.environ["MYSQL_DATABASE"]
-    SQLALCHEMY_DATABASE_URI = (
-        f"mysql+pymysql://{mysql_user}:{mysql_pass}@db/{mysql_db}"
-    )
+    mongo_user = os.environ["MONGO_USER"]
+    mongo_password = os.environ["MONGO_PASSWORD"]
+    mongo_db = os.environ["MONGO_DATABASE"]
+    MONGO_URI = f"mongodb://{mongo_user}:{mongo_password}@db:27017/{mongo_db}"
 
     @classmethod
     def init_app(cls, app):

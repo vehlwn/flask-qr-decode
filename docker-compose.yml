@@ -7,35 +7,49 @@ services:
     restart: always
     depends_on:
       - db
-    env_file:
-      - .env
+    environment:
+      - FLASK_INTERNAL_PORT=$CONFIG_FLASK_INTERNAL_PORT
+      - GUNICORN_INTERNAL_PORT=$CONFIG_GUNICORN_INTERNAL_PORT
+      - MONGO_DATABASE=$CONFIG_MONGO_DATABASE
+      - MONGO_PASSWORD=$CONFIG_MONGO_PASSWORD
+      - MONGO_USER=$CONFIG_MONGO_USER
 
   db:
-    image: mysql:8.0.23
+    build:
+      context: ./
+      dockerfile: Dockerfile.mongo
+      args:
+        - MONGO_DATABASE=$CONFIG_MONGO_DATABASE
+        - MONGO_PASSWORD=$CONFIG_MONGO_PASSWORD
+        - MONGO_USER=$CONFIG_MONGO_USER
+    environment:
+      - MONGO_INITDB_DATABASE=$CONFIG_MONGO_DATABASE
+      - MONGO_INITDB_ROOT_PASSWORD=$CONFIG_MONGO_ROOT_PASSWORD
+      - MONGO_INITDB_ROOT_USERNAME=$CONFIG_MONGO_ROOT_USER
     restart: always
-    env_file:
-      - .env
-    volumes:
-      - /tmp/db_data:/var/lib/mysql
 
-  adminer:
-    image: adminer:4.8.0
+  mongo-express:
+    image: mongo-express
     restart: always
-    depends_on:
-      - db
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=$CONFIG_MONGO_USER
+      - ME_CONFIG_BASICAUTH_PASSWORD=$CONFIG_MONGO_PASSWORD
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=$CONFIG_MONGO_ROOT_USER
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=$CONFIG_MONGO_ROOT_PASSWORD
+      - ME_CONFIG_MONGODB_SERVER=db
 
   proxy:
     build:
       context: ./
       dockerfile: Dockerfile.nginx
       args:
-        - GUNICORN_INTERNAL_PORT=$GUNICORN_INTERNAL_PORT
-        - NGINX_INTERNAL_PORT_APP=$NGINX_INTERNAL_PORT_APP
-        - NGINX_INTERNAL_PORT_ADMINER=$NGINX_INTERNAL_PORT_ADMINER
+        - GUNICORN_INTERNAL_PORT=$CONFIG_GUNICORN_INTERNAL_PORT
+        - NGINX_INTERNAL_PORT_ADMINER=$CONFIG_NGINX_INTERNAL_PORT_ADMINER
+        - NGINX_INTERNAL_PORT_APP=$CONFIG_NGINX_INTERNAL_PORT_APP
     restart: always
     ports:
-      - 0.0.0.0:$NGINX_EXTERNAL_PORT_APP:$NGINX_INTERNAL_PORT_APP
-      - 0.0.0.0:$NGINX_EXTERNAL_PORT_ADMINER:$NGINX_INTERNAL_PORT_ADMINER
+      - 0.0.0.0:$CONFIG_NGINX_EXTERNAL_PORT_ADMINER:$CONFIG_NGINX_INTERNAL_PORT_ADMINER
+      - 0.0.0.0:$CONFIG_NGINX_EXTERNAL_PORT_APP:$CONFIG_NGINX_INTERNAL_PORT_APP
     depends_on:
       - app
     logging:
