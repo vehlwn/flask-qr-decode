@@ -1,8 +1,9 @@
 import flask
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hashes, hmac
 import cachetools
 import datetime
+import secrets
 
 from . import main
 from .forms import ImageForm
@@ -16,23 +17,32 @@ cached_scanning_results = mutex.Mutex(
     cachetools.TTLCache(maxsize=100, ttl=datetime.timedelta(hours=1).total_seconds())
 )
 
+_HMAC_KEY = secrets.token_bytes(32)
+
+
+def _hmac_input_bytes(data: bytes) -> bytes:
+    digest = hmac.HMAC(_HMAC_KEY, hashes.SHA256(), backend=default_backend())
+    digest.update(data)
+    return digest.finalize()
+
 
 @main.route("/", methods=["GET", "POST"])
 def index():
     form = ImageForm()
     if form.validate_on_submit():
         f = form.image_field.data
-        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
         image_bytes = f.read()
-        digest.update(image_bytes)
-        image_hash_str = digest.finalize().hex()
+        image_hash_str = _hmac_input_bytes(image_bytes).hex()
         with cached_scanning_results.lock() as cache:
             if image_hash_str in cache.get():
                 result = cache.get()[image_hash_str]
-                print(f"{image_hash_str} found in cache")
             else:
-                print(f"{image_hash_str} not found in cache, decode started")
-                result = barcode_scanner.decode(image_bytes, _OUTPUT_IMAGE_FORMAT)
+                try:
+                    result = barcode_scanner.decode(
+                        image_bytes, _OUTPUT_IMAGE_FORMAT
+                    )
+                except Exception as ex:
+                    flask.abort(500, str(ex))
                 cache.get()[image_hash_str] = result
         return flask.render_template(
             "index.html",
